@@ -1,41 +1,29 @@
-class Chat {
-    constructor() {
-        var url = window.location.hostname;
-        this.ws = new WebSocket("ws://" + url + ":3001");
-
-        this.ws.onerror = (error) => {
-            $("#connection_label").html("Not connected: error");
-        };
-
-        this.ws.onopen = () => {
-            $("#connection_label").html("Connected");
-        };
-
-        this.ws.onmessage = (event) => {
-            var json=JSON.parse(event.data);
-            if(json.message){
-                var date = new Date();
-                var hour = date.getHours();
-                var minute = date.getMinutes();
-                var time = hour + ':' + minute;
-                $("#messageBoard").append('<li>' + time + ' <b>' + json.message.name + ':</b> ' +  json.message.text.fontcolor(json.message.color) +'</li>');
+var connection;
+window.addEventListener("load", function () {
+    var nickname = prompt("Choose a nickname")
+    if (nickname) {
+        connection = new WebSocket("ws://"+window.location.hostname+":8081")
+        connection.onopen = function () {
+            console.log("Connection opened")
+            connection.send(nickname)
+            document.getElementById("form").onsubmit = function (event) {
+                var msg = document.getElementById("msg")
+                if (msg.value)
+                    connection.send(msg.value)
+                msg.value = ""
+                event.preventDefault()
             }
-        };
-
-        this.ws.onclose = function(message) {
-            $("#connection_label").html("Not connected: closed connection");
-        };
-    }
-
-    send_text() {
-        if(this.ws.readyState==1) {
-            var json={"message": { "name": $("#name").val(), "color": $("#color").val(), "text": $("#message").val()}};
-            this.ws.send(JSON.stringify(json));
+        }
+        connection.onclose = function () {
+            console.log("Connection closed")
+        }
+        connection.onerror = function () {
+            console.error("Connection error")
+        }
+        connection.onmessage = function (event) {
+            var div = document.createElement("div")
+            div.textContent = event.data
+            document.body.appendChild(div)
         }
     }
-}
-
-var chat;
-$(document).ready(function(){
-    chat = new Chat();
-});
+})
