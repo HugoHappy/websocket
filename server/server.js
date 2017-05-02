@@ -12,7 +12,7 @@ http_server.use(express.static(__dirname + "/../client"));
 var connections = [];
 var messages = [];
 
-var ws_server = ws.createServer((connection) =>    {
+var ws_server = ws.createServer({}, (connection) =>    {
     console.log('Opened a connection');
     connections.push(connection);
 
@@ -41,6 +41,13 @@ var ws_server = ws.createServer((connection) =>    {
 });
 
 ws_server.listen(3001);
+
+function broadcast(str) {
+    server.connections.forEach(function (connection) {
+        connection.sendText(str)
+    })
+}
+
 
 //Start the web server serving the WebSocket client
 //Open http://localhost:3000 in a web browser
